@@ -124,8 +124,6 @@ The benchmark runner prints progress logs while running, for example:
 [17:44:21] [ZDT1] MOMSA run 1/10 finished in 0.03s (GD=..., S=..., Delta=..., MS=...)
 ```
 
-This is helpful during longer experiments because the terminal no longer stays blank between problems.
-
 **Saved Artifacts**
 By default, benchmark runs save:
 
@@ -135,7 +133,7 @@ By default, benchmark runs save:
 - `outputs/plots/*.png`: Pareto-front comparison figures
 
 **Metrics**
-The benchmark pipeline reports these metrics to `10` decimal places:
+The benchmark pipeline reports these metrics :
 
 - `GD`: Generational Distance
 - `S`: Spacing
@@ -149,15 +147,3 @@ Lower values are generally better for `GD`, `S`, and `Delta`, while higher value
 - Metaheuristic algorithms are stochastic, so repeated runs with multiple seeds are essential.
 - Results from Python will not necessarily match MATLAB line-by-line, but they should be compared through the same benchmark problems and evaluation metrics.
 - For serious experiments, use fixed seeds, consistent iteration counts, and the same archive/population settings across algorithms.
-
-**Academic Use**
-If you use this codebase in a report, thesis, or paper, it is a good idea to document:
-
-- the exact benchmark suite used
-- number of runs per problem
-- number of iterations or generations
-- population and archive sizes
-- random seed policy
-- the version of this repository and installed dependencies
-
-That makes your study easier to reproduce and easier to defend academically.
