@@ -1,0 +1,65 @@
+Metadata-Version: 2.4
+Name: momsa-bench
+Version: 0.1.0
+Summary: Paper-inspired MSA and MOMSA implementations with benchmark harnesses.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=2.0
+Requires-Dist: matplotlib>=3.8
+Provides-Extra: baselines
+Requires-Dist: pymoo>=0.6.1; extra == "baselines"
+
+# MOMSA Benchmark Project
+
+This repository is structured to build up from the single-objective `MSA` to the multi-objective `MOMSA` described in the paper `10.1038/s41598-021-99617-x`.
+
+## Layout
+
+- `src/momsa/algorithms`: optimization algorithms
+- `src/momsa/problems`: benchmark objective functions
+- `src/momsa/metrics`: Pareto utilities and benchmark metrics
+- `src/momsa/benchmarks`: experiment configurations and runners
+- `scripts`: simple entry points to run examples and benchmarks
+
+## Install
+
+```bash
+python3 -m pip install -e .
+```
+
+Optional baseline comparisons using `pymoo`:
+
+```bash
+python3 -m pip install pymoo
+```
+
+## Quick start
+
+Run a paper-style benchmark suite with `MOMSA`:
+
+```bash
+python3 scripts/run_benchmarks.py --suite paper --algorithm momsa
+```
+
+Run the same suite with baseline comparisons, progress logs, Pareto plots, and saved result tables:
+
+```bash
+python3 scripts/run_benchmarks.py --include-baselines --runs 10 --iterations 250
+```
+
+Run a simple single-objective example with `MSA`:
+
+```bash
+python3 scripts/run_msa_example.py
+```
+
+## Notes
+
+The implementations here are intentionally modular and paper-inspired. The benchmark problems and evaluation metrics follow the paper directly. The movement operators are coded to match the paper's role structure and search behavior, while staying readable and extensible in Python.
+
+Running the benchmark script saves these artifacts by default:
+
+- `outputs/results.json`: detailed per-run records
+- `outputs/summary_table.txt`: console-style summary table
+- `outputs/summary_metrics.csv`: spreadsheet-friendly summary table
+- `outputs/plots/*.png`: Pareto-front comparison plots
