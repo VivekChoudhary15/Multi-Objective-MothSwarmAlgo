@@ -1,54 +1,163 @@
 # MOMSA Benchmark Project
 
-This repository is structured to build up from the single-objective `MSA` to the multi-objective `MOMSA` described in the paper `10.1038/s41598-021-99617-x`.
+Python reference implementation and benchmark harness for the single-objective `MSA` and the multi-objective `MOMSA` described in the paper:
 
-## Layout
+Sharifi, M. R., Akbarifard, S., Qaderi, K., and Madadi, M. R.  
+`A new optimization algorithm to solve multi-objective problems`  
+Scientific Reports, 2021. DOI: `10.1038/s41598-021-99617-x`
 
-- `src/momsa/algorithms`: optimization algorithms
-- `src/momsa/problems`: benchmark objective functions
-- `src/momsa/metrics`: Pareto utilities and benchmark metrics
-- `src/momsa/benchmarks`: experiment configurations and runners
-- `scripts`: simple entry points to run examples and benchmarks
+This repository is organized as a small research-style codebase:
+- implement `MSA` first
+- extend it into `MOMSA`
+- evaluate `MOMSA` on standard `ZDT` and `DTLZ` benchmark suites
+- compare against baseline algorithms such as `NSGA-II`, `SPEA2`, and `MOEA/D`
 
-## Install
+**Features**
+- modular implementations of `MSA` and `MOMSA`
+- built-in `ZDT` and `DTLZ` benchmark problems
+- Pareto and multi-objective evaluation utilities
+- benchmark runner with live progress logs
+- summary tables in text and CSV formats
+- Pareto-front plots for 2-objective and 3-objective problems
+- optional `pymoo` baselines for standard comparisons
 
-```bash
-python3 -m pip install -e .
-```
-
-Optional baseline comparisons using `pymoo`:
-
-```bash
-python3 -m pip install pymoo
-```
-
-## Quick start
-
-Run a paper-style benchmark suite with `MOMSA`:
+**Environment Setup**
+Use a dedicated virtual environment so the project remains isolated and reproducible.
 
 ```bash
-python3 scripts/run_benchmarks.py --suite paper --algorithm momsa
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+python -m pip install pymoo
 ```
 
-Run the same suite with baseline comparisons, progress logs, Pareto plots, and saved result tables:
+To leave the environment:
 
 ```bash
-python3 scripts/run_benchmarks.py --include-baselines --runs 10 --iterations 250
+deactivate
 ```
 
-Run a simple single-objective example with `MSA`:
+**Repository Structure**
+```text
+.
+├── README.md
+├── pyproject.toml
+├── scripts/
+│   ├── run_msa_example.py
+│   └── run_benchmarks.py
+├── src/
+│   └── momsa/
+│       ├── __init__.py
+│       ├── types.py
+│       ├── algorithms/
+│       │   ├── __init__.py
+│       │   ├── msa.py
+│       │   └── momsa.py
+│       ├── benchmarks/
+│       │   ├── __init__.py
+│       │   ├── baselines.py
+│       │   ├── config.py
+│       │   ├── runner.py
+│       │   └── visualization.py
+│       ├── metrics/
+│       │   ├── __init__.py
+│       │   ├── indicators.py
+│       │   └── pareto.py
+│       └── problems/
+│           ├── __init__.py
+│           ├── base.py
+│           ├── dtlz.py
+│           └── zdt.py
+└── outputs/
+    ├── results.json
+    ├── summary_metrics.csv
+    ├── summary_table.txt
+    └── plots/
+```
+
+**File Guide**
+- `README.md`: project overview, setup, usage, and outputs.
+- `pyproject.toml`: package metadata and Python dependencies.
+- `scripts/run_msa_example.py`: small single-objective demo run for `MSA`.
+- `scripts/run_benchmarks.py`: main benchmark entry point for `MOMSA` and baseline comparisons.
+- `src/momsa/__init__.py`: top-level package exports.
+- `src/momsa/types.py`: shared dataclasses and array-related helper types.
+- `src/momsa/algorithms/msa.py`: single-objective `MSA` implementation.
+- `src/momsa/algorithms/momsa.py`: multi-objective `MOMSA` implementation with archive and crowding-distance logic.
+- `src/momsa/problems/base.py`: basic problem protocols and a simple `Sphere` example.
+- `src/momsa/problems/zdt.py`: `ZDT` benchmark problem definitions used in multi-objective testing.
+- `src/momsa/problems/dtlz.py`: `DTLZ` benchmark problem definitions for tri-objective evaluation.
+- `src/momsa/metrics/pareto.py`: Pareto dominance, non-dominated filtering, crowding distance, and archive truncation utilities.
+- `src/momsa/metrics/indicators.py`: benchmark metrics such as `GD`, `Spacing`, `Spread`, and `Maximum Spread`.
+- `src/momsa/benchmarks/config.py`: default benchmark configuration values.
+- `src/momsa/benchmarks/runner.py`: repeated-run execution, summary aggregation, and formatted result tables.
+- `src/momsa/benchmarks/baselines.py`: optional `pymoo` baseline integration for `NSGA-II`, `SPEA2`, and `MOEA/D`.
+- `src/momsa/benchmarks/visualization.py`: Pareto-front plot generation for saved figures.
+- `outputs/`: generated artifacts from benchmark runs.
+
+**Quick Start**
+Run a simple single-objective example:
 
 ```bash
-python3 scripts/run_msa_example.py
+python scripts/run_msa_example.py
 ```
 
-## Notes
+Run the paper-style benchmark suite for `MOMSA` only:
 
-The implementations here are intentionally modular and paper-inspired. The benchmark problems and evaluation metrics follow the paper directly. The movement operators are coded to match the paper's role structure and search behavior, while staying readable and extensible in Python.
+```bash
+python scripts/run_benchmarks.py --runs 10 --iterations 250
+```
 
-Running the benchmark script saves these artifacts by default:
+Run the same suite with standard baseline comparisons:
 
-- `outputs/results.json`: detailed per-run records
-- `outputs/summary_table.txt`: console-style summary table
-- `outputs/summary_metrics.csv`: spreadsheet-friendly summary table
-- `outputs/plots/*.png`: Pareto-front comparison plots
+```bash
+python scripts/run_benchmarks.py --include-baselines --runs 10 --iterations 250
+```
+
+**Typical Benchmark Output**
+The benchmark runner prints progress logs while running, for example:
+
+```text
+[17:44:20] Starting problem 1/7: ZDT1
+[17:44:20] [ZDT1] MOMSA run 1/10 started with seed=0
+[17:44:21] [ZDT1] MOMSA run 1/10 finished in 0.03s (GD=..., S=..., Delta=..., MS=...)
+```
+
+This is helpful during longer experiments because the terminal no longer stays blank between problems.
+
+**Saved Artifacts**
+By default, benchmark runs save:
+
+- `outputs/results.json`: detailed per-run records and summary statistics
+- `outputs/summary_table.txt`: terminal-style metric table
+- `outputs/summary_metrics.csv`: spreadsheet-friendly summary file
+- `outputs/plots/*.png`: Pareto-front comparison figures
+
+**Metrics**
+The benchmark pipeline reports these metrics to `10` decimal places:
+
+- `GD`: Generational Distance
+- `S`: Spacing
+- `Delta`: Spread
+- `MS`: Maximum Spread
+
+Lower values are generally better for `GD`, `S`, and `Delta`, while higher values are typically better for `MS`.
+
+**Reproducibility Notes**
+- The current implementation is paper-inspired and modular, intended for transparent experimentation and further refinement.
+- Metaheuristic algorithms are stochastic, so repeated runs with multiple seeds are essential.
+- Results from Python will not necessarily match MATLAB line-by-line, but they should be compared through the same benchmark problems and evaluation metrics.
+- For serious experiments, use fixed seeds, consistent iteration counts, and the same archive/population settings across algorithms.
+
+**Academic Use**
+If you use this codebase in a report, thesis, or paper, it is a good idea to document:
+
+- the exact benchmark suite used
+- number of runs per problem
+- number of iterations or generations
+- population and archive sizes
+- random seed policy
+- the version of this repository and installed dependencies
+
+That makes your study easier to reproduce and easier to defend academically.
