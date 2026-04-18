@@ -1,5 +1,0 @@
-numpy>=2.0
-matplotlib>=3.8
-
-[baselines]
-pymoo>=0.6.1
