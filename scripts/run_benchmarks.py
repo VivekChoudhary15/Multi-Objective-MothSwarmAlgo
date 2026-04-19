@@ -53,6 +53,7 @@ def main() -> None:
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--iterations", type=int, default=250)
     parser.add_argument("--include-baselines", action="store_true")
+    parser.add_argument("--problems", type=str, default="", help="Optional comma-separated problem names, e.g. ZDT3 or ZDT1,DTLZ2.")
     parser.add_argument("--output", type=str, default="outputs/results.json")
     parser.add_argument("--plot-dir", type=str, default="outputs/plots")
     parser.add_argument("--table-output", type=str, default="outputs/summary_table.txt")
@@ -66,10 +67,15 @@ def main() -> None:
     output_records: list[dict] = []
     table_rows: list[dict] = []
     plot_dir = Path(args.plot_dir)
+    selected = {name.strip().upper() for name in args.problems.split(",") if name.strip()}
+    problems = [problem for problem in paper_suite() if not selected or problem.name.upper() in selected]
+
+    if not problems:
+        raise SystemExit(f"No matching problems found for --problems={args.problems!r}")
 
     log(baseline_note())
-    for problem_index, problem in enumerate(paper_suite(), start=1):
-        log(f"Starting problem {problem_index}/7: {problem.name}")
+    for problem_index, problem in enumerate(problems, start=1):
+        log(f"Starting problem {problem_index}/{len(problems)}: {problem.name}")
         summary = run_momsa_benchmark(problem, config, log=log)
         log(format_summary(summary))
         output_records.append(serializable_summary(summary))
