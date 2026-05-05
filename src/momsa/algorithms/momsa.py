@@ -53,8 +53,14 @@ class MOMSA(MSA):
                 new_pop[idx] = self._update_onlooker(pop[idx], moonlight, prospector, bounds, iteration)
 
             new_scores = np.array([problem.evaluate(x) for x in new_pop], dtype=float)
-            pop = new_pop
-            scores = new_scores
+
+            # Elitist selection: combine parent + offspring, keep best N by
+            # non-dominated rank with crowding-distance tie-breaking.
+            combined_x = np.vstack([pop, new_pop])
+            combined_f = np.vstack([scores, new_scores])
+            pop, scores = self._select_population(
+                combined_x, combined_f, self.config.population_size
+            )
 
             merged_x = np.vstack([archive_x, pop])
             merged_f = np.vstack([archive_f, scores])
@@ -71,6 +77,33 @@ class MOMSA(MSA):
             crowd[mask] = crowding_distance(scores[mask])
         dominance_rank = np.where(mask, 0, 1)
         return np.lexsort((-crowd, dominance_rank))
+
+    def _select_population(self, xs: Array, fs: Array, n: int) -> tuple[Array, Array]:
+        """NSGA-II-style truncation: fill ranks until full, last rank by crowding."""
+        if len(fs) <= n:
+            return xs, fs
+
+        selected_x: list[Array] = []
+        selected_f: list[Array] = []
+        remaining = np.arange(len(fs))
+        while len(remaining) > 0 and len(selected_x) < n:
+            sub_f = fs[remaining]
+            mask = non_dominated_mask(sub_f)
+            layer = remaining[mask]
+            slots = n - len(selected_x)
+            if len(layer) <= slots:
+                for i in layer:
+                    selected_x.append(xs[i])
+                    selected_f.append(fs[i])
+            else:
+                crowd = crowding_distance(fs[layer])
+                order = np.argsort(-crowd)
+                for i in layer[order[:slots]]:
+                    selected_x.append(xs[i])
+                    selected_f.append(fs[i])
+            remaining = remaining[~mask]
+
+        return np.asarray(selected_x, dtype=float), np.asarray(selected_f, dtype=float)
 
     def _select_guides(self, archive_x: Array, archive_f: Array, fallback_pop: Array) -> tuple[Array, Array]:
         if len(archive_x) == 0:

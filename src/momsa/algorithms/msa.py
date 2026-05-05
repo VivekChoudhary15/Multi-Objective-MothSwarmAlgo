@@ -90,7 +90,8 @@ class MSA:
         return u / (np.abs(v) ** (1.0 / beta) + 1e-12)
 
     def _update_pathfinder(self, pop: Array, idx: int, bounds: Bounds, iteration: int) -> Array:
-        ids = self.rng.choice(len(pop), size=5, replace=False)
+        available = np.delete(np.arange(len(pop)), idx)
+        ids = self.rng.choice(available, size=5, replace=False)
         base = pop[ids[0]]
         diff = self.rng.random() * (pop[ids[1]] - pop[ids[2]]) + self.rng.random() * (pop[ids[3]] - pop[ids[4]])
         step = self.config.levy_scale * self._levy_step(bounds.dim)
@@ -99,10 +100,11 @@ class MSA:
         return bounds.clip(candidate)
 
     def _update_prospector(self, moth: Array, target: Array, bounds: Bounds, iteration: int) -> Array:
-        distance = target - moth
+        # Eq. (8): x_new = |x_target - x_moth| * e^(b*t) * cos(2*pi*t) + x_target
+        distance = np.abs(target - moth)
         t = self.rng.uniform(-1.0, 1.0)
         spiral = np.exp(self.config.spiral_b * t) * np.cos(2.0 * np.pi * t)
-        candidate = moth + spiral * distance
+        candidate = target + spiral * distance
         return bounds.clip(candidate)
 
     def _update_onlooker(self, moth: Array, moonlight: Array, prospector: Array, bounds: Bounds, iteration: int) -> Array:
@@ -111,7 +113,16 @@ class MSA:
             sigma = self.config.gaussian_scale * (1.0 - 0.7 * progress)
             candidate = prospector + self.rng.normal(0.0, sigma, bounds.dim) * (moonlight - moth)
         else:
+            # Eq. (11): associative learning with a small immigration term
+            low = bounds.lower - moth
+            high = bounds.upper - moth
+            immigration = 0.001 * (low + self.rng.random(bounds.dim) * (high - low))
             r1 = self.rng.random(bounds.dim)
             r2 = self.rng.random(bounds.dim)
-            candidate = moth + self.config.learning_rate * r1 * (moonlight - moth) + (1.0 - self.config.learning_rate) * r2 * (prospector - moth)
+            candidate = (
+                moth
+                + immigration
+                + self.config.learning_rate * r1 * (moonlight - moth)
+                + (1.0 - self.config.learning_rate) * r2 * (prospector - moth)
+            )
         return bounds.clip(candidate)

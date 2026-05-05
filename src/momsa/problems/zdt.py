@@ -17,10 +17,12 @@ class ZDTProblem:
 
     def __post_init__(self) -> None:
         self.n_obj = 2
-        self.bounds = Bounds(
-            lower=np.zeros(self.n_var, dtype=float),
-            upper=np.ones(self.n_var, dtype=float),
-        )
+        lower = np.zeros(self.n_var, dtype=float)
+        upper = np.ones(self.n_var, dtype=float)
+        if self.kind == "zdt4":
+            lower[1:] = -5.0
+            upper[1:] = 5.0
+        self.bounds = Bounds(lower=lower, upper=upper)
 
     def evaluate(self, x: Array) -> Array:
         x = np.asarray(x, dtype=float)
